@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "groups": [{"short":0,"groups":[1,2]}],
+  "scenes": [{"short":0,"levels":{"2":128,"5":254}}],
+  "dt8_presets": [
+    {"name":"演示红","mode":"rgbw","values":{"r":254,"g":0,"b":0,"w":0}}
+  ]
+}

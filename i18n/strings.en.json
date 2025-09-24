@@ -1,0 +1,19 @@
+{
+  "app.title": "LiFud DALI Host",
+  "menu.language": "Language",
+  "menu.language.zh": "Chinese",
+  "menu.language.en": "English",
+  "menu.tools": "Tools",
+  "menu.tools.scan_gateways": "Scan Gateways...",
+  "menu.view": "View",
+  "menu.view.log_pane": "Log Pane",
+  "action.export_logs": "Export Logs",
+  "status.connected": "Connected",
+  "status.disconnected": "Disconnected",
+  "status.message": "Status: {status}",
+  "status.connecting": "Connecting",
+  "status.connect.failed": "Connection failed: {error}",
+  "status.disconnected.brief": "Disconnected",
+  "dialog.about.title": "About",
+  "dialog.about.body": "LiFud DALI Host (Python + Qt)\\nCurrent phase: Minimum viable dimming"
+}

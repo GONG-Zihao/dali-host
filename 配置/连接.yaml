@@ -1,0 +1,5 @@
+gateway:
+  type: "mock"     # mock | tcp
+  host: "192.168.1.100"
+  port: 5588
+  timeout_sec: 0.8

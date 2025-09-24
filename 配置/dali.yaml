@@ -1,0 +1,55 @@
+ops:
+  # —— 这两项用于 xy（16位，写入 DTR0/1 后发命令）——
+  dt8_set_x_opcode: 224   # 0xE0  Set Temporary Chromaticity X
+  dt8_set_y_opcode: 225   # 0xE1  Set Temporary Chromaticity Y
+  # 常见编码（十进制）：可依据设备手册调整
+  recall_scene_base: 64          # 0x40 + scene
+  store_dtr_as_scene_base: 80    # 0x50 + scene
+  remove_from_scene_base: 144    # 0x90 + scene
+  add_to_group_base: 96          # 0x60 + group
+  remove_from_group_base: 112    # 0x70 + group
+  write_dtr: 163                 # 0xA3
+ # —— RGBW 主色控制（多数设备用 E2..E5；如有 A/F 通道再扩展）——
+  dt8_set_primary:
+    r: 226               # 0xE2  Set Primary R
+    g: 227               # 0xE3  Set Primary G
+    b: 228               # 0xE4  Set Primary B
+    w: 229               # 0xE5  Set Primary W
+ # —— DT8 / Tc 相关（可按设备手册改数字）——
+  dt8_enable_addr: 193      # 0xC1  Enable Device Type (data=8)
+  dt8_set_tc_opcode: 231    # 0xE7  Set Temporary Colour Temperature Tc（地址寻址）
+  write_dtr0_addr: 163      # 0xA3  写 DTR0（addr=0xA3, data=LSB）
+  write_dtr1_addr: 195      # 0xC3  写 DTR1（addr=0xC3, data=MSB）
+
+tc:
+  kelvin_min: 1700
+  kelvin_max: 8000
+
+presets:
+  - name: "红"       # 纯红
+    mode: "rgbw"
+    values: { r: 254, g: 0, b: 0, w: 0 }
+
+  - name: "绿"       # 纯绿
+    mode: "rgbw"
+    values: { r: 0, g: 254, b: 0, w: 0 }
+
+  - name: "蓝"       # 纯蓝
+    mode: "rgbw"
+    values: { r: 0, g: 0, b: 254, w: 0 }
+
+  - name: "暖白(2700K)"
+    mode: "tc"
+    kelvin: 2700
+
+  - name: "中性白(4000K)"
+    mode: "tc"
+    kelvin: 4000
+
+  - name: "冷白(6500K)"
+    mode: "tc"
+    kelvin: 6500
+
+  - name: "D65"
+    mode: "xy"
+    values: { x: 0.3127, y: 0.3290 }

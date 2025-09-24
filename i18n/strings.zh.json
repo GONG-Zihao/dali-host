@@ -1,0 +1,19 @@
+{
+  "app.title": "莱福德 DALI 上位机",
+  "menu.language": "语言",
+  "menu.language.zh": "中文",
+  "menu.language.en": "English",
+  "menu.tools": "工具",
+  "menu.tools.scan_gateways": "扫描网关...",
+  "menu.view": "视图",
+  "menu.view.log_pane": "日志窗格",
+  "action.export_logs": "导出日志",
+  "status.connected": "已连接",
+  "status.disconnected": "未连接",
+  "status.message": "状态：{status}",
+  "status.connecting": "连接中",
+  "status.connect.failed": "连接失败：{error}",
+  "status.disconnected.brief": "已断开",
+  "dialog.about.title": "关于",
+  "dialog.about.body": "DALI上位机（Python + Qt）\\n当前阶段：最小可用闭环（调光）"
+}

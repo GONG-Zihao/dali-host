@@ -1,0 +1,5 @@
+app:
+  title: "DALI上位机"
+  theme: "auto"    # auto | dark | light
+logging:
+  level: "INFO"    # DEBUG / INFO / WARNING / ERROR

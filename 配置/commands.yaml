@@ -1,0 +1,36 @@
+commands:
+  - name: "OFF (ARC=0)"
+    type: "arc"
+    value: 0
+
+  - name: "ON (ARC=254)"
+    type: "arc"
+    value: 254
+
+  - name: "Recall Scene"
+    type: "base_plus_param"
+    base: 64        # 0x40 + scene
+    param: "scene"
+    min: 0
+    max: 15
+
+  - name: "Store DTR as Scene"
+    type: "base_plus_param"
+    base: 80        # 0x50 + scene
+    param: "scene"
+    min: 0
+    max: 15
+
+  - name: "Add To Group"
+    type: "base_plus_param"
+    base: 96        # 0x60 + group
+    param: "group"
+    min: 0
+    max: 15
+
+  - name: "Remove From Group"
+    type: "base_plus_param"
+    base: 112       # 0x70 + group
+    param: "group"
+    min: 0
+    max: 15
