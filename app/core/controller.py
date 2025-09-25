@@ -1,8 +1,11 @@
 from __future__ import annotations
 import logging
 from pathlib import Path
+from typing import Dict, List
 from .transport.base import Transport, MockTransport
 from .transport.tcp_gateway import TcpGateway
+from .transport.serial_port import SerialGateway
+from .transport.hid_gateway import HidGateway
 from .dali.frames import addr_broadcast, addr_short, addr_group, make_forward_frame
 
 class Controller:
@@ -16,6 +19,20 @@ class Controller:
             self._transport: Transport = TcpGateway(
                 host=gw_cfg.get("host", "127.0.0.1"),
                 port=int(gw_cfg.get("port", 5588)),
+                timeout=float(gw_cfg.get("timeout_sec", 0.8)),
+            )
+        elif gtype == "serial":
+            self._transport = SerialGateway(
+                port=gw_cfg.get("port", "COM1"),
+                baudrate=int(gw_cfg.get("baudrate", 19200)),
+                timeout=float(gw_cfg.get("timeout_sec", 0.8)),
+            )
+        elif gtype == "hid":
+            vid = gw_cfg.get("vid")
+            pid = gw_cfg.get("pid")
+            self._transport = HidGateway(
+                vendor_id=int(vid, 0) if isinstance(vid, str) else vid,
+                product_id=int(pid, 0) if isinstance(pid, str) else pid,
                 timeout=float(gw_cfg.get("timeout_sec", 0.8)),
             )
         else:
@@ -80,6 +97,55 @@ class Controller:
         frame = make_forward_frame(a, opcode)
         self._transport.send(frame)
         return self._transport.recv(timeout=timeout)
+
+    # ========== 设备查询 ==========
+    def query_status(self, short_addr: int, timeout: float = 0.3) -> bytes | None:
+        opcode = int(self._cfg_ops().get("query_status", 144))
+        return self.send_command("short", opcode, addr_val=int(short_addr), timeout=timeout)
+
+    def query_groups(self, short_addr: int, timeout: float = 0.3) -> Dict[int, int]:
+        ops = self._cfg_ops()
+        groups: Dict[int, int] = {i: 0 for i in range(16)}
+
+        lo_opcode = int(ops.get("query_groups_0_7", 192))
+        hi_opcode = int(ops.get("query_groups_8_15", 193))
+
+        lo_resp = self.send_command("short", lo_opcode, addr_val=int(short_addr), timeout=timeout)
+        hi_resp = self.send_command("short", hi_opcode, addr_val=int(short_addr), timeout=timeout)
+
+        if lo_resp:
+            mask = lo_resp[0]
+            for bit in range(8):
+                groups[bit] = 1 if (mask >> bit) & 1 else 0
+        if hi_resp:
+            mask = hi_resp[0]
+            for bit in range(8):
+                groups[8 + bit] = 1 if (mask >> bit) & 1 else 0
+        return groups
+
+    def query_scene_levels(self, short_addr: int, timeout: float = 0.3) -> Dict[int, int | None]:
+        ops = self._cfg_ops()
+        base = int(ops.get("query_scene_level_base", 176))
+        levels: Dict[int, int | None] = {}
+        for scene in range(16):
+            opcode = (base + scene) & 0xFF
+            resp = self.send_command("short", opcode, addr_val=int(short_addr), timeout=timeout)
+            if resp and len(resp) > 0:
+                levels[scene] = int(resp[0])
+            else:
+                levels[scene] = None
+        return levels
+
+    def scan_devices(self, short_range: range | List[int] = range(64), timeout: float = 0.3) -> List[int]:
+        found: List[int] = []
+        for short in short_range:
+            try:
+                resp = self.query_status(int(short), timeout=timeout)
+                if resp is not None:
+                    found.append(int(short))
+            except Exception as exc:  # pragma: no cover - transport failures only logged
+                self._log.debug("query_status failed for %s: %s", short, exc)
+        return found
 
     # ========== 组管理 ==========
     def group_add(self, target_mode: str, group: int, addr_val: int | None = None, unaddr: bool = False):

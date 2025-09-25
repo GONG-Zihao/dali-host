@@ -1,10 +1,16 @@
 from __future__ import annotations
 import logging
 from PySide6.QtWidgets import (
-    QGroupBox, QGridLayout, QRadioButton, QSpinBox, QCheckBox, QLabel,
-    QPushButton, QVBoxLayout, QLineEdit
+    QGroupBox,
+    QGridLayout,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QLineEdit,
+    QSpinBox,
 )
 from app.gui.widgets.base_panel import BasePanel
+from app.gui.widgets.address_target import AddressTargetWidget
 from app.i18n import tr, trf
 
 
@@ -24,21 +30,8 @@ class PanelRW(BasePanel):
     def _build_ui(self):
         root = QVBoxLayout(self)
 
-        # 地址区
-        self.box_addr = QGroupBox()
-        g = QGridLayout(self.box_addr)
-        self.rb_bcast = QRadioButton()
-        self.rb_bcast.setChecked(True)
-        self.chk_unaddr = QCheckBox()
-        self.rb_short = QRadioButton()
-        self.sb_short = QSpinBox(); self.sb_short.setRange(0, 63)
-        self.rb_group = QRadioButton()
-        self.sb_group = QSpinBox(); self.sb_group.setRange(0, 15)
-
-        g.addWidget(self.rb_bcast, 0, 0); g.addWidget(self.chk_unaddr, 0, 1)
-        g.addWidget(self.rb_short, 1, 0); g.addWidget(self.sb_short, 1, 1)
-        g.addWidget(self.rb_group, 2, 0); g.addWidget(self.sb_group, 2, 1)
-        root.addWidget(self.box_addr)
+        self.addr_widget = AddressTargetWidget(self)
+        root.addWidget(self.addr_widget)
 
         # 命令区
         self.box_cmd = QGroupBox()
@@ -76,16 +69,11 @@ class PanelRW(BasePanel):
         self.apply_language()
 
     # ---------- helpers ----------
-    def _read_addr_mode(self) -> tuple[str, int | None, bool]:
-        if self.rb_short.isChecked():
-            return "short", self.sb_short.value(), False
-        if self.rb_group.isChecked():
-            return "group", self.sb_group.value(), False
-        return "broadcast", None, self.chk_unaddr.isChecked()
-
     # ---------- actions ----------
     def _on_send(self):
-        mode, addr_val, unaddr = self._read_addr_mode()
+        mode = self.addr_widget.mode()
+        addr_val = self.addr_widget.addr_value()
+        unaddr = self.addr_widget.unaddressed()
         opcode = self.sb_opcode.value()
         timeout = self.sb_timeout.value() / 1000.0
         try:
@@ -106,11 +94,7 @@ class PanelRW(BasePanel):
             self.show_msg(trf("发送失败：{error}", "Send failed: {error}", error=e), 5000)
 
     def apply_language(self):
-        self.box_addr.setTitle(tr("地址选择", "Address selection"))
-        self.rb_bcast.setText(tr("广播", "Broadcast"))
-        self.chk_unaddr.setText(tr("仅未寻址", "Not addressed only"))
-        self.rb_short.setText(tr("短地址", "Short address"))
-        self.rb_group.setText(tr("组地址", "Group address"))
+        self.addr_widget.apply_language()
 
         self.box_cmd.setTitle(tr("命令查询（is_command=1）", "Command query (is_command=1)"))
         self.lbl_opcode.setText(tr("命令字节 (0–255)：", "Command byte (0–255):"))

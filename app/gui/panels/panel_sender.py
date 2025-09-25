@@ -4,13 +4,24 @@ from pathlib import Path
 from typing import Optional, List, Dict
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QGroupBox, QGridLayout, QRadioButton, QSpinBox,
-    QCheckBox, QLabel, QPushButton, QTabWidget, QComboBox, QLineEdit,
-    QListWidget, QListWidgetItem, QFileDialog, QTextEdit
+    QWidget,
+    QVBoxLayout,
+    QGridLayout,
+    QLabel,
+    QPushButton,
+    QTabWidget,
+    QComboBox,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QFileDialog,
+    QTextEdit,
+    QSpinBox,
 )
 from PySide6.QtCore import Qt, QDateTime
 
 from app.gui.widgets.base_panel import BasePanel
+from app.gui.widgets.address_target import AddressTargetWidget
 from app.core.utils.hexutil import parse_pairs, fmt_pair
 from app.core.config import load_yaml
 from app.core.dali.frames import addr_broadcast, addr_short, addr_group
@@ -39,17 +50,8 @@ class PanelSender(BasePanel):
     def _build_ui(self):
         root = QVBoxLayout(self)
 
-        # 地址选择
-        self.box_addr = QGroupBox()
-        ag = QGridLayout(self.box_addr)
-        self.rb_b = QRadioButton(); self.rb_b.setChecked(True)
-        self.chk_unaddr = QCheckBox()
-        self.rb_s = QRadioButton(); self.sb_s = QSpinBox(); self.sb_s.setRange(0, 63)
-        self.rb_g = QRadioButton(); self.sb_g = QSpinBox(); self.sb_g.setRange(0, 15)
-        ag.addWidget(self.rb_b, 0, 0); ag.addWidget(self.chk_unaddr, 0, 1)
-        ag.addWidget(self.rb_s, 1, 0); ag.addWidget(self.sb_s, 1, 1)
-        ag.addWidget(self.rb_g, 2, 0); ag.addWidget(self.sb_g, 2, 1)
-        root.addWidget(self.box_addr)
+        self.addr_widget = AddressTargetWidget(self)
+        root.addWidget(self.addr_widget)
 
         # Tabs
         self.tabs = QTabWidget()
@@ -110,7 +112,7 @@ class PanelSender(BasePanel):
         self.btn_import = QPushButton()
 
         self.btn_replay.clicked.connect(self._replay)
-        self.btn_delete.clicked.connect(self._del)
+        self.btn_delete.clicked.connect(self._delete)
         self.btn_clear.clicked.connect(self._clear)
         self.btn_export.clicked.connect(self._export)
         self.btn_import.clicked.connect(self._import)
@@ -127,11 +129,14 @@ class PanelSender(BasePanel):
     # Shared helpers
     # ------------------------------------------------------------------
     def _addr_byte(self, is_command: bool) -> int:
-        if self.rb_s.isChecked():
-            return addr_short(self.sb_s.value(), is_command=is_command)
-        if self.rb_g.isChecked():
-            return addr_group(self.sb_g.value(), is_command=is_command)
-        return addr_broadcast(is_command=is_command, unaddressed=self.chk_unaddr.isChecked())
+        mode = self.addr_widget.mode()
+        value = self.addr_widget.addr_value()
+        unaddr = self.addr_widget.unaddressed()
+        if mode == "short" and value is not None:
+            return addr_short(value, is_command=is_command)
+        if mode == "group" and value is not None:
+            return addr_group(value, is_command=is_command)
+        return addr_broadcast(is_command=is_command, unaddressed=unaddr)
 
     def _current_cmd(self) -> Optional[dict]:
         idx = self.cb_cmd.currentIndex()
@@ -323,11 +328,7 @@ class PanelSender(BasePanel):
     # Language refresh
     # ------------------------------------------------------------------
     def apply_language(self):
-        self.box_addr.setTitle(tr("地址选择", "Address selection"))
-        self.rb_b.setText(tr("广播", "Broadcast"))
-        self.chk_unaddr.setText(tr("仅未寻址", "Not addressed only"))
-        self.rb_s.setText(tr("短地址", "Short address"))
-        self.rb_g.setText(tr("组地址", "Group address"))
+        self.addr_widget.apply_language()
 
         idx = self.tabs.indexOf(self.tab_quick)
         if idx >= 0:
@@ -358,14 +359,3 @@ class PanelSender(BasePanel):
         self.btn_clear.setText(tr("清空", "Clear"))
         self.btn_export.setText(tr("导出JSON", "Export JSON"))
         self.btn_import.setText(tr("导入JSON", "Import JSON"))
-
-    # ------------------------------------------------------------------
-    # Qt slots with camelCase names for compatibility
-    # ------------------------------------------------------------------
-    def _del(self):
-        row = self.list.currentRow()
-        if row < 0:
-            return
-        del self._history[row]
-        self.list.takeItem(row)
-        self._save_history()

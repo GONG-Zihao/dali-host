@@ -89,9 +89,10 @@ def _install_tools_scan(win: QtWidgets.QMainWindow):
         tools_menu.setTitle(_tr(i18n.t("menu.tools", tools_menu.title())))
 
     act_scan = QtGui.QAction(_tr(i18n.t("menu.tools.scan_gateways", "扫描网关...")), win)
+
     def open_scan():
         try:
-            from app.panels.panel_gateway_scan import GatewayScanDialog
+            from app.experimental.panel_gateway_scan import GatewayScanDialog
         except Exception:
             QtWidgets.QMessageBox.warning(win, _tr("缺失"), _tr("panel_gateway_scan 未找到"))
             return

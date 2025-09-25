@@ -20,6 +20,8 @@
 - 定时任务：一次/间隔/每天/每周；动作支持 ARC/Scene/DT8/Raw；未连接自动跳过
 - 配置导入导出：组成员、场景亮度、DT8 预设的 JSON 导入/应用/导出
 - 一致 UI：状态栏提示、连接门控（未连接时所有“发送/开始”禁用）
+- 设备清单：扫描短址、读取组成员位/场景亮度，导出 JSON
+- 无界面调度：headless 模式加载/执行定时任务
 - 扩展开关：扩展启动后自动安装“语言”切换菜单、网关扫描入口、日志停靠窗格
 
 ---
@@ -28,19 +30,30 @@
 
 环境要求
 - Python 3.10–3.12
-- 依赖见 `requirements.txt`（已指向清华镜像）
+- 依赖拆分：核心依赖在 `requirements.base.txt`，可选扩展在 `requirements.extras.txt`
 
 首次安装
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+# 或单独安装：
+#   基础依赖：pip install -r requirements.base.txt
+#   可选扩展：pip install -r requirements.extras.txt
 ```
 
 启动（中文/英文）
 ```bash
 python -m app.main --light --lang=zh   # 中文
 python -m app.main --light --lang=en   # English
+```
+
+无界面调度（可选）
+```bash
+python -m app.headless --lang=zh              # 列出当前任务概况
+python -m app.headless --lang=zh --run        # 启动调度循环（Ctrl+C 退出）
+# 指定任务文件
+python -m app.headless --lang=zh --run --load-tasks 数据/schedule/tasks.json
 ```
 
 提示
@@ -64,11 +77,13 @@ i18n/
   direct.map.json                         # 直译映射（中↔英，含模板占位）
 tools/
   patcher.py                              # 辅助脚本：向入口追加扩展安装代码
-requirements.txt                          # 项目依赖（含清华镜像）
-requirements.bak                          # 备份依赖清单
+requirements.txt                          # 默认安装入口（引用 base）
+requirements.base.txt                     # 核心依赖列表
+requirements.extras.txt                   # 可选扩展依赖
 
 app/
   main.py                                 # 程序入口：主题/字体/i18n、主窗体、扩展安装
+  headless.py                             # 无界面调度入口（命令行）
   i18n.py                                 # I18N 实现：字典 + 直译表 + 模板翻译 + translate_text_to
   assets/
     fonts/
@@ -87,14 +102,15 @@ app/
       panel_dt8_color.py                  # DT8 色彩：xy、RGBW（含预设）
       panel_dt8_tc.py                     # DT8 Tc：Kelvin 输入 → Mirek 写入
       panel_groups.py                     # 组管理：加入/移除
+      panel_inventory.py                 # 设备扫描/组场景读回
       panel_rw.py                         # 变量读写：命令查询（is_command=1）
       panel_scenes.py                     # 场景：保存/回放/移除
       panel_scheduler.py                  # 定时任务：一次/间隔/每日/每周
       panel_sender.py                     # 指令发送：快捷命令/自定义帧/历史
-  panels/                                  # 辅助/示例面板（被扩展或工具菜单调用）
-    panel_addr_alloc.py                   # 地址分配（示例/工具）
-    panel_gateway_scan.py                 # 扫描网关对话框（扩展菜单入口）
-    panel_timecontrol.py                  # 时间控制（旧方案示例）
+  experimental/                            # 实验/示例面板（默认不加载）
+    panel_addr_alloc.py                   # 地址分配示例
+    panel_gateway_scan.py                 # 扫描网关占位（工具菜单调用）
+    panel_timecontrol.py                  # 旧版时间控制示例
   core/
     controller.py                         # 上位机核心：将 GUI 动作翻译为传输层帧
     config.py                             # 加载 YAML 配置并填充 opcode/tc 默认值
@@ -103,6 +119,8 @@ app/
     transport/
       base.py                             # Transport 抽象 + MockTransport（自测用）
       tcp_gateway.py                      # TCP 网关透传实现
+      serial_port.py                      # 串口传输（占位）
+      hid_gateway.py                      # HID 传输（占位）
     logging/
       logger.py                           # 日志初始化（控制台 + 滚动文件）
     analysis/
@@ -155,6 +173,15 @@ app/
 
 ---
 
+## “设备清单”面板说明
+
+- 扫描：对短址 0..63 做状态查询（Query Status），发现在线设备。
+- 读取组：读取 Query Groups 0–7/8–15 的位图；界面显示为“属于的组号列表”。
+- 读取场景：读取 0..15 场景的亮度（0..254；255=未编程）；界面显示为“场景号:亮度值”。
+- Mock 模式下的数据仅作占位，不代表真实设备状态；要获取准确数据请连接真实网关。
+
+---
+
 ## 语言与字体
 
 - 启动参数 `--lang=zh|en`，或运行后通过菜单「语言」切换。
@@ -190,7 +217,8 @@ commands:
 - 扩展安装：启动后异步安装语言菜单、工具→扫描网关、视图→日志窗格；日志支持导出。
 - 连接门控：未连接时相关按钮自动禁用（统一在 `BasePanel.register_send_widgets`）。
 - 日志：写入 `~/.dali_host/logs/`（滚动 5MB×3）。
-- 依赖：详见 `requirements.txt`（包含开发工具如 ruff/black/pytest）。
+- 依赖：核心见 `requirements.base.txt`，扩展见 `requirements.extras.txt`。
+- UI 复用：所有面板统一使用 `AddressTargetWidget` 选择寻址目标（广播/短址/组址）。
 
 本地调试小贴士
 - VS Code 选择解释器为 `.venv/bin/python`，设置 `python.terminal.activateEnvironment=true`。
@@ -200,11 +228,10 @@ commands:
 
 ## 路线图
 
-- 读取现场状态并导出（组成员位、场景级别）
 - 宏录制/回放（动作序列）
-- 无界面守护或系统任务计划集成（cron/Task Scheduler）
+- 本地 API（REST/WebSocket）与外部系统联动（可选）
+- 传输扩展（串口/HID）与异常恢复（重连、心跳、超时/重试）
 - 分析页：CDF 上标注 P50/P95/P99 参考线；报告模板
-- 传输扩展（串口/HID）与异常恢复
 
 ---
 

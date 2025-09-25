@@ -1,0 +1,13 @@
+--index-url https://pypi.tuna.tsinghua.edu.cn/simple
+--extra-index-url https://pypi.org/simple
+
+# Core runtime dependencies
+pyside6
+numpy
+matplotlib
+pyyaml
+
+# Tooling (optional but recommended for development)
+pytest
+ruff
+black

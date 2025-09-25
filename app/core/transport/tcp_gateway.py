@@ -36,7 +36,12 @@ class TcpGateway(Transport):
             raise RuntimeError("Not connected")
         # 大多数网关支持短包直发；若需要可在此加协议头
         self._log.info("SEND %s", frame.hex(" "))
-        self._sock.sendall(frame)
+        try:
+            self._sock.sendall(frame)
+        except (BrokenPipeError, ConnectionResetError, OSError) as exc:
+            self._log.warning("TCP send failed, closing socket: %s", exc)
+            self.disconnect()
+            raise RuntimeError("TCP connection lost") from exc
 
     def recv(self, timeout: float = 0.5) -> bytes | None:
         if not self._sock:

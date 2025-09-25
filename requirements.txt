@@ -1,35 +1,6 @@
---index-url https://pypi.tuna.tsinghua.edu.cn/simple
---extra-index-url https://pypi.org/simple
-pyside6
-pyqtgraph
-python-dali
-hidapi
-pyserial
-zeroconf
-aiohttp
-websockets
-numpy
-pandas
-scipy
-scikit-learn
-statsmodels
-matplotlib
-sqlalchemy
-aiosqlite
-duckdb
-pyyaml
-loguru
-tenacity
-apscheduler
-click
-fastapi
-uvicorn
-pytest
-pytest-qt
-mypy
-ruff
-black
-openpyxl
-xlrd
-pyinstaller
-qdarkstyle>=3.2
+# Default installation uses the minimal core dependencies.
+-r requirements.base.txt
+
+# Optional components (transports, analytics, services) are listed in:
+#   requirements.extras.txt
+# Install with: pip install -r requirements.extras.txt
