@@ -29,6 +29,10 @@ def load_yaml(path: Path) -> dict:
 
 def get_app_config(root_dir: Path) -> dict:
     cfg_dir = root_dir / "配置"
+    if not cfg_dir.exists():
+        alt = root_dir / "config"
+        if alt.exists():
+            cfg_dir = alt
     app_cfg  = load_yaml(cfg_dir / "应用.yaml")
     conn_cfg = load_yaml(cfg_dir / "连接.yaml")
     dali_cfg = load_yaml(cfg_dir / "dali.yaml")
@@ -51,6 +55,10 @@ def get_app_config(root_dir: Path) -> dict:
     ops.setdefault("add_to_group_base", 96)
     ops.setdefault("remove_from_group_base", 112)
     ops.setdefault("write_dtr", 163)
+    ops.setdefault("query_status", 144)
+    ops.setdefault("query_groups_0_7", 192)
+    ops.setdefault("query_groups_8_15", 193)
+    ops.setdefault("query_scene_level_base", 176)
     # DT8 默认
     ops.setdefault("dt8_enable_addr", 193)
     ops.setdefault("dt8_set_tc_opcode", 231)

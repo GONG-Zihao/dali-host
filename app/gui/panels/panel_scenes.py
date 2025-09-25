@@ -1,10 +1,16 @@
 from __future__ import annotations
 import logging
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QGroupBox, QGridLayout, QRadioButton, QSpinBox,
-    QCheckBox, QLabel, QPushButton
+    QWidget,
+    QVBoxLayout,
+    QGroupBox,
+    QGridLayout,
+    QSpinBox,
+    QLabel,
+    QPushButton,
 )
 from app.gui.widgets.base_panel import BasePanel
+from app.gui.widgets.address_target import AddressTargetWidget
 from app.i18n import tr, trf
 
 
@@ -18,20 +24,8 @@ class PanelScenes(BasePanel):
     def _build_ui(self):
         root = QVBoxLayout(self)
 
-        # 地址选择（可短址/组址/广播）
-        self.box_addr = QGroupBox()
-        ag = QGridLayout(self.box_addr)
-        self.rb_bcast = QRadioButton()
-        self.rb_bcast.setChecked(True)
-        self.chk_unaddr = QCheckBox()
-        self.rb_short = QRadioButton()
-        self.sb_short = QSpinBox(); self.sb_short.setRange(0, 63)
-        self.rb_group = QRadioButton()
-        self.sb_group = QSpinBox(); self.sb_group.setRange(0, 15)
-        ag.addWidget(self.rb_bcast, 0, 0); ag.addWidget(self.chk_unaddr, 0, 1)
-        ag.addWidget(self.rb_short, 1, 0); ag.addWidget(self.sb_short, 1, 1)
-        ag.addWidget(self.rb_group, 2, 0); ag.addWidget(self.sb_group, 2, 1)
-        root.addWidget(self.box_addr)
+        self.addr_widget = AddressTargetWidget(self)
+        root.addWidget(self.addr_widget)
 
         # 场景操作
         self.box_sc = QGroupBox()
@@ -60,15 +54,10 @@ class PanelScenes(BasePanel):
 
         self.apply_language()
 
-    def _addr(self):
-        if self.rb_short.isChecked():
-            return "short", self.sb_short.value(), False
-        if self.rb_group.isChecked():
-            return "group", self.sb_group.value(), False
-        return "broadcast", None, self.chk_unaddr.isChecked()
-
     def _on_recall(self):
-        mode, addr_val, unaddr = self._addr()
+        mode = self.addr_widget.mode()
+        addr_val = self.addr_widget.addr_value()
+        unaddr = self.addr_widget.unaddressed()
         scene = self.sb_scene.value()
         try:
             self.ctrl.scene_recall(mode, scene, addr_val=addr_val, unaddr=unaddr)
@@ -77,7 +66,9 @@ class PanelScenes(BasePanel):
             self.show_msg(trf("失败：{error}", "Failed: {error}", error=e), 5000)
 
     def _on_store(self):
-        mode, addr_val, unaddr = self._addr()
+        mode = self.addr_widget.mode()
+        addr_val = self.addr_widget.addr_value()
+        unaddr = self.addr_widget.unaddressed()
         scene = self.sb_scene.value()
         level = self.sb_level.value()
         try:
@@ -87,7 +78,9 @@ class PanelScenes(BasePanel):
             self.show_msg(trf("失败：{error}", "Failed: {error}", error=e), 5000)
 
     def _on_remove(self):
-        mode, addr_val, unaddr = self._addr()
+        mode = self.addr_widget.mode()
+        addr_val = self.addr_widget.addr_value()
+        unaddr = self.addr_widget.unaddressed()
         scene = self.sb_scene.value()
         try:
             self.ctrl.scene_remove(mode, scene, addr_val=addr_val, unaddr=unaddr)
@@ -96,11 +89,7 @@ class PanelScenes(BasePanel):
             self.show_msg(trf("失败：{error}", "Failed: {error}", error=e), 5000)
 
     def apply_language(self):
-        self.box_addr.setTitle(tr("地址选择", "Address selection"))
-        self.rb_bcast.setText(tr("广播", "Broadcast"))
-        self.chk_unaddr.setText(tr("仅未寻址", "Not addressed only"))
-        self.rb_short.setText(tr("短地址", "Short address"))
-        self.rb_group.setText(tr("组地址", "Group address"))
+        self.addr_widget.apply_language()
 
         self.box_sc.setTitle(tr("场景操作", "Scene operation"))
         self.lbl_scene.setText(tr("场景(0–15)：", "Scene (0–15):"))

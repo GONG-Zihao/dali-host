@@ -1,0 +1,40 @@
+--index-url https://pypi.tuna.tsinghua.edu.cn/simple
+--extra-index-url https://pypi.org/simple
+
+# Optional transport backends
+pyserial         # Serial gateway support (future)
+hidapi           # HID transport support (future)
+zeroconf         # Gateway auto-discovery
+
+# Optional networking / services
+aiohttp
+websockets
+fastapi
+uvicorn
+click
+
+# Data analysis & storage stack (reserved)
+pandas
+scipy
+scikit-learn
+statsmodels
+sqlalchemy
+aiosqlite
+duckdb
+
+# Logging / resilience / scheduling utilities
+loguru
+tenacity
+apscheduler
+
+# GUI / visualization extras
+pyqtgraph
+python-dali
+qdarktheme
+
+# Packaging & tooling
+pyinstaller
+mypy
+pytest-qt
+openpyxl
+xlrd

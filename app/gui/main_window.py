@@ -11,13 +11,17 @@ from pathlib import Path
 from app.i18n import i18n
 
 
-def _tr_static(text: str) -> str:
+def _tr_static(text: str, en_fallback: str | None = None) -> str:
     try:
-        if getattr(i18n, "lang", "zh") == "zh":
+        lang = getattr(i18n, "lang", "zh")
+        if lang == "zh":
             return text
-        return i18n.translate_text(text)
+        translated = i18n.translate_text(text)
+        if translated == text and en_fallback:
+            return en_fallback
+        return translated
     except Exception:
-        return text
+        return en_fallback or text
 
 # 面板
 from .panels.panel_dimming import PanelDimming
@@ -29,6 +33,7 @@ from .panels.panel_dt8_tc import PanelDt8Tc
 from .panels.panel_dt8_color import PanelDt8Color
 from .panels.panel_benchmark import PanelBenchmark
 from .panels.panel_sender import PanelSender
+from .panels.panel_inventory import PanelInventory
 from .panels.panel_scheduler import PanelScheduler
 from .panels.panel_config_io import PanelConfigIO
 from app.core.presets import combined_presets
@@ -69,6 +74,8 @@ class MainWindow(QMainWindow):
         presets_all = combined_presets(root_dir, self._cfg)
         self.tabs.addTab(PanelDt8Color(self.ctrl, status, ops_cfg, presets_all), _tr_static("色彩（DT8）"))
         self.tabs.addTab(PanelSender(self.ctrl, status, root_dir), _tr_static("指令发送"))
+        self.tabs.addTab(PanelInventory(self.ctrl, status, root_dir),_tr_static("设备清单", "Inventory"))
+
         self.tabs.addTab(PanelBenchmark(self.ctrl, status, root_dir), _tr_static("压力测试"))
         self.tabs.addTab(PanelAnalysis(self.ctrl, status, root_dir), _tr_static("数据分析"))
         self.tabs.addTab(PanelScheduler(self.ctrl, status, root_dir), _tr_static("定时任务"))

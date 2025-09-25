@@ -1,11 +1,18 @@
 from __future__ import annotations
 import logging
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QGroupBox, QGridLayout, QRadioButton, QSpinBox,
-    QCheckBox, QLabel, QPushButton, QSlider
+    QWidget,
+    QVBoxLayout,
+    QGroupBox,
+    QGridLayout,
+    QSpinBox,
+    QLabel,
+    QPushButton,
+    QSlider,
 )
 from PySide6.QtCore import Qt
 from app.gui.widgets.base_panel import BasePanel
+from app.gui.widgets.address_target import AddressTargetWidget
 from app.i18n import tr, trf
 
 
@@ -20,17 +27,8 @@ class PanelDt8Tc(BasePanel):
     def _build_ui(self):
         root = QVBoxLayout(self)
 
-        # 地址选择
-        self.box_addr = QGroupBox()
-        ag = QGridLayout(self.box_addr)
-        self.rb_b = QRadioButton(); self.rb_b.setChecked(True)
-        self.chk_unaddr = QCheckBox()
-        self.rb_s = QRadioButton(); self.sb_s = QSpinBox(); self.sb_s.setRange(0, 63)
-        self.rb_g = QRadioButton(); self.sb_g = QSpinBox(); self.sb_g.setRange(0, 15)
-        ag.addWidget(self.rb_b, 0, 0); ag.addWidget(self.chk_unaddr, 0, 1)
-        ag.addWidget(self.rb_s, 1, 0); ag.addWidget(self.sb_s, 1, 1)
-        ag.addWidget(self.rb_g, 2, 0); ag.addWidget(self.sb_g, 2, 1)
-        root.addWidget(self.box_addr)
+        self.addr_widget = AddressTargetWidget(self)
+        root.addWidget(self.addr_widget)
 
         # Tc 设置
         kmin = int(self.tc_cfg.get("kelvin_min", 1700))
@@ -61,13 +59,6 @@ class PanelDt8Tc(BasePanel):
         # 连接门控
         self.register_send_widgets([self.btn_send])
 
-    def _addr(self):
-        if self.rb_s.isChecked():
-            return "short", self.sb_s.value(), False
-        if self.rb_g.isChecked():
-            return "group", self.sb_g.value(), False
-        return "broadcast", None, self.chk_unaddr.isChecked()
-
     def _update_mirek(self, k: int):
         try:
             m = max(1, min(65534, int(round(1_000_000 / float(k)))))
@@ -78,7 +69,9 @@ class PanelDt8Tc(BasePanel):
             pass
 
     def _on_send(self):
-        mode, addr_val, unaddr = self._addr()
+        mode = self.addr_widget.mode()
+        addr_val = self.addr_widget.addr_value()
+        unaddr = self.addr_widget.unaddressed()
         k = self.spinK.value()
         try:
             out = self.ctrl.dt8_set_tc_kelvin(mode, k, addr_val=addr_val, unaddr=unaddr)
@@ -87,11 +80,7 @@ class PanelDt8Tc(BasePanel):
             self.show_msg(trf("失败：{error}", "Failed: {error}", error=e), 5000)
 
     def apply_language(self):
-        self.box_addr.setTitle(tr("地址选择", "Address selection"))
-        self.rb_b.setText(tr("广播", "Broadcast"))
-        self.chk_unaddr.setText(tr("仅未寻址", "Not addressed only"))
-        self.rb_s.setText(tr("短地址", "Short address"))
-        self.rb_g.setText(tr("组地址", "Group address"))
+        self.addr_widget.apply_language()
 
         self.box_tc.setTitle(tr("色温（Kelvin）→ Mirek", "Color temperature (Kelvin) → Mirek"))
         self.lbl_k.setText(tr("K：", "K:"))

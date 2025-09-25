@@ -9,6 +9,10 @@ ops:
   add_to_group_base: 96          # 0x60 + group
   remove_from_group_base: 112    # 0x70 + group
   write_dtr: 163                 # 0xA3
+  query_status: 144              # 0x90  Query Status
+  query_groups_0_7: 192          # 0xC0  Query Groups 0-7
+  query_groups_8_15: 193         # 0xC1  Query Groups 8-15
+  query_scene_level_base: 176    # 0xB0 + scene
  # —— RGBW 主色控制（多数设备用 E2..E5；如有 A/F 通道再扩展）——
   dt8_set_primary:
     r: 226               # 0xE2  Set Primary R
