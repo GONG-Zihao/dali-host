@@ -1,5 +1,5 @@
-# 莱福德 DALI 上位机（Python + Qt）
-
+# Lifud DALI 上位机（Python + Qt）
+# （本人2025年9月在四川省莱福德科技有限公司实习时所做的项目）
 一个用 Python + PySide6 开发的 DALI 上位机。提供从设备控制 → 压力测试 → 数据分析 → 配置迁移/定时执行 的闭环能力，并内置双语界面与中文图表字体支持。
 
 > 支持 DALI 两字节前向帧，DT8（Tc / xy / RGBW）；内置 MockTransport 便于开发和无硬件联调。
