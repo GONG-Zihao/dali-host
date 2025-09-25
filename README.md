@@ -68,8 +68,7 @@ python -m app.headless --lang=zh --run --load-tasks 数据/schedule/tasks.json
 
 ```
 README.md                                # 项目说明（本文件）
-codex_tasks.yaml
-                        # Codex CLI 任务配置（开发辅助）
+
 i18n/
   strings.zh.json                         # 中文词条（键值型字典）
   strings.en.json                         # 英文词条
