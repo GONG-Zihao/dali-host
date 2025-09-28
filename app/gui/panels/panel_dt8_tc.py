@@ -8,11 +8,10 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QLabel,
     QPushButton,
-    QSlider,
 )
-from PySide6.QtCore import Qt
 from app.gui.widgets.base_panel import BasePanel
 from app.gui.widgets.address_target import AddressTargetWidget
+from app.gui.widgets.kelvin_gradient_slider import KelvinGradientSlider
 from app.i18n import tr, trf
 
 
@@ -35,7 +34,8 @@ class PanelDt8Tc(BasePanel):
         kmax = int(self.tc_cfg.get("kelvin_max", 8000))
         self.box_tc = QGroupBox()
         tg = QGridLayout(self.box_tc)
-        self.slider = QSlider(Qt.Horizontal); self.slider.setRange(kmin, kmax)
+        self.slider = KelvinGradientSlider(kmin, kmax, self)
+        self.slider.setRange(kmin, kmax)
         self.spinK  = QSpinBox(); self.spinK.setRange(kmin, kmax); self.spinK.setValue(4000)
         self.spinM  = QSpinBox(); self.spinM.setRange(1, 65534); self.spinM.setReadOnly(True)
 
